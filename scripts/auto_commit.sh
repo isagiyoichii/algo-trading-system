@@ -1,18 +1,24 @@
 #!/bin/bash
 
 # === CONFIGURATION ===
-COMMIT_MSG=${1:-"Auto-commit on $(date '+%Y-%m-%d %H:%M:%S')"}
+PROJECT_ROOT="/c/Users/ronit/OneDrive/Documents/Algo_Trader/algo-trading-system"
+LOG_FILE="$PROJECT_ROOT/logs/auto_commit.log"
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+COMMIT_MSG=${1:-"Auto-commit on $TIMESTAMP"}
 
-# === EXECUTION ===
-echo "[INFO] Staging all changes..."
-git add .
+# === LOGGING EXECUTION ===
+echo "[$TIMESTAMP] Starting auto commit..." >> "$LOG_FILE"
+
+cd "$PROJECT_ROOT"
+
+git add . >> "$LOG_FILE" 2>&1
 
 if git diff --cached --quiet; then
-  echo "[INFO] No changes to commit."
+  echo "[$TIMESTAMP] No changes to commit." >> "$LOG_FILE"
   exit 0
 fi
 
-echo "[INFO] Committing with message: $COMMIT_MSG"
-git commit -m "$COMMIT_MSG"
-echo "[INFO] Pushing to origin/main"
-git push origin main
+git commit -m "$COMMIT_MSG" >> "$LOG_FILE" 2>&1
+git push origin main >> "$LOG_FILE" 2>&1
+
+echo "[$TIMESTAMP] Commit complete: $COMMIT_MSG" >> "$LOG_FILE"
