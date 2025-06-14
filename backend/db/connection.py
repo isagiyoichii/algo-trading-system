@@ -4,7 +4,7 @@ import os
 
 load_dotenv()
 
-def get_pg_connection():
+def get_db_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
         port=os.getenv("DB_PORT"),

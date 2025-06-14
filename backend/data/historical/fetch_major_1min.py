@@ -1,13 +1,18 @@
+import sys
+import os
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
 import os
 import time
 import datetime
-import logging
-import psycopg2
 import pandas as pd
 from dotenv import load_dotenv
 from kiteconnect import KiteConnect
-from backend.db.connection import get_pg_connection
 from backend.data.utils.instrument_list import INDEX_INSTRUMENTS
+from backend.data.historical.insert_ohlcv import insert_ohlcv  # NEW IMPORT
 
 # ─────────────────────────────────────────────────────────────
 # CONFIGURATION
@@ -40,8 +45,6 @@ kite.set_access_token(ACCESS_TOKEN)
 
 def fetch_ohlcv(token: int, symbol: str) -> dict:
     print(f"\n📈 {symbol} ({token}) → Fetching 1-min OHLCV")
-    conn = get_pg_connection()
-    cur = conn.cursor()
 
     start_date = START_DATE
     end_date = END_DATE
@@ -67,27 +70,20 @@ def fetch_ohlcv(token: int, symbol: str) -> dict:
                 continue
 
             batch_count += 1
-            rows = []
-            for row in candles:
-                rows.append((
-                    token,
-                    row["date"],
-                    row["open"],
-                    row["high"],
-                    row["low"],
-                    row["close"],
-                    row.get("volume", 0)
-                ))
 
-            insert_query = """
-                INSERT INTO ohlcv (instrument_token, timestamp, open, high, low, close, volume)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING
-            """
-            cur.executemany(insert_query, rows)
-            conn.commit()
+            df = pd.DataFrame(candles)
+            df.rename(columns={
+                "date": "timestamp",
+                "open": "open",
+                "high": "high",
+                "low": "low",
+                "close": "close",
+                "volume": "volume"
+            }, inplace=True)
 
-            row_count = len(rows)
+            insert_ohlcv(df, token)  # ✅ Call your new ingest logic
+
+            row_count = len(df)
             print(f"✅ {symbol}: {from_date.date()} → {to_date.date()} | {row_count} rows")
             total_inserted += row_count
             start_date = to_date + datetime.timedelta(days=1)
@@ -106,8 +102,6 @@ def fetch_ohlcv(token: int, symbol: str) -> dict:
                 print(f"❌ {symbol}: Error {error_msg}")
                 start_date += datetime.timedelta(days=RETRY_INCREMENT_DAYS)
 
-    cur.close()
-    conn.close()
     print(f"\n🎯 {symbol}: Total inserted: {total_inserted}")
     return {
         "symbol": symbol,
