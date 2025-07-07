@@ -1,4 +1,3 @@
- 
 CREATE TABLE IF NOT EXISTS instruments (
     instrument_token BIGINT PRIMARY KEY,
     tradingsymbol TEXT,
@@ -23,7 +22,8 @@ CREATE TABLE IF NOT EXISTS ohlcv (
     close NUMERIC,
     volume BIGINT,
     interval TEXT,
-    FOREIGN KEY (instrument_token) REFERENCES instruments(instrument_token)
+    FOREIGN KEY (instrument_token) REFERENCES instruments(instrument_token),
+    UNIQUE (timestamp, instrument_token)
 );
 
 CREATE TABLE IF NOT EXISTS trades (
