@@ -61,8 +61,8 @@ ML (future)  | scikit-learn, XGBoost
 ## 📌 Roadmap
 
 - [x] Phase 0: Setup & Infrastructure
-- [ ] Phase 1: Data Collector
-- [ ] Phase 2: Strategy Backtester
+- [x] Phase 1: Data Collector
+- [x] Phase 2: Strategy Backtester
 - [ ] Phase 3: Portfolio Manager
 - [ ] Phase 4: ML/AI Integration
 - [ ] Phase 5: Analytics Dashboard
